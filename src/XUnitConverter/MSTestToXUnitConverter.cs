@@ -164,7 +164,10 @@ namespace XUnitConverter
                     }
                     else
                     {
-                        transformationRoot = transformationRoot.RemoveNode(attributeListSyntax, SyntaxRemoveOptions.KeepLeadingTrivia);
+                        var triviaRemovalOptions = attributeListSyntax.HasStructuredTrivia
+                            ? SyntaxRemoveOptions.KeepLeadingTrivia
+                            : SyntaxRemoveOptions.KeepNoTrivia;
+                        transformationRoot = transformationRoot.RemoveNode(attributeListSyntax, triviaRemovalOptions);
                     }
                 }
                 return transformationRoot;
