@@ -136,7 +136,7 @@ namespace System.Composition.UnitTests
     }
 }
 ";
-            await Verify(text, expected, false);
+            await Verify(text, expected);
         }
 
 
