@@ -101,7 +101,7 @@ namespace System.Composition.UnitTests
     }
 }
 ";
-            await Verify(text, expected);
+            await Verify(text, expected, false);
         }
 
         [Fact]
@@ -136,7 +136,7 @@ namespace System.Composition.UnitTests
     }
 }
 ";
-            await Verify(text, expected);
+            await Verify(text, expected, false);
         }
 
 
