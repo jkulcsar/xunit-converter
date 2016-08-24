@@ -132,6 +132,7 @@ namespace XUnitConverter
         private void RemoveTestAttributes(CompilationUnitSyntax root, SemanticModel semanticModel, TransformationTracker transformationTracker, string attributeName)
         {
             List<AttributeSyntax> nodesToRemove = new List<AttributeSyntax>();
+            List<ClassDeclarationSyntax> classNodesToFixUp = new List<ClassDeclarationSyntax>();
 
             foreach (var attributeListSyntax in root.DescendantNodes().OfType<AttributeListSyntax>())
             {
@@ -150,6 +151,7 @@ namespace XUnitConverter
                 }).ToList();
 
                 nodesToRemove.AddRange(attributesToRemove);
+                classNodesToFixUp.AddRange(attributesToRemove.Select(x => (ClassDeclarationSyntax)x.Parent.Parent));
             }
 
             transformationTracker.AddTransformation(nodesToRemove, (transformationRoot, rewrittenNodes, originalNodeMap) =>
@@ -164,13 +166,21 @@ namespace XUnitConverter
                     }
                     else
                     {
-                        var triviaRemovalOptions = attributeListSyntax.HasStructuredTrivia
-                            ? SyntaxRemoveOptions.KeepLeadingTrivia
-                            : SyntaxRemoveOptions.KeepNoTrivia;
-                        transformationRoot = transformationRoot.RemoveNode(attributeListSyntax, triviaRemovalOptions);
+                        transformationRoot = transformationRoot.RemoveNode(attributeListSyntax, SyntaxRemoveOptions.KeepLeadingTrivia);
                     }
                 }
                 return transformationRoot;
+            });
+
+            transformationTracker.AddTransformation(classNodesToFixUp, (transformationRoot, rewrittenNodes, originalNodeMap) =>
+            {
+                return transformationRoot.ReplaceNodes(rewrittenNodes, (originalNode, rewrittenNode) =>
+                {
+                    var classNode = (ClassDeclarationSyntax)rewrittenNode;
+                    var leadingTrivia = classNode.GetLeadingTrivia();
+                    var fixUppedTrivia = leadingTrivia.RemoveAt(leadingTrivia.Count - 1);
+                    return classNode.WithLeadingTrivia(fixUppedTrivia);
+                });
             });
         }
 
