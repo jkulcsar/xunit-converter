@@ -178,6 +178,42 @@ namespace System.Composition.UnitTests
         }
 
         [Fact]
+        public async Task TestUpdatesTestInitializeAttributes()
+        {
+            var text = @"
+using System;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace System.Composition.UnitTests
+{
+    public class MyTestClass
+    {
+        [TestInitialize]
+        public void Setup()
+        {
+        }
+    }
+}
+";
+
+            var expected = @"
+using System;
+using Xunit;
+
+namespace System.Composition.UnitTests
+{
+    public class MyTestClass
+    {
+        public MyTestClass()
+        {
+        }
+    }
+}
+";
+            await Verify(text, expected);
+        }
+
+        [Fact]
         public async Task TestUpdatesAsserts()
         {
             var text = @"

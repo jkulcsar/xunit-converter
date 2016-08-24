@@ -90,6 +90,7 @@ namespace XUnitConverter
             TransformationTracker transformationTracker = new TransformationTracker();
             RemoveTestClassAttributes(root, semanticModel, transformationTracker);
             RemoveContractsRequiredAttributes(root, semanticModel, transformationTracker);
+            ChangeTestInitializeToCtor(root, semanticModel, transformationTracker);
             ChangeTestMethodAttributesToFact(root, semanticModel, transformationTracker);
             ChangeAssertCalls(root, semanticModel, transformationTracker);
             root = transformationTracker.TransformRoot(root);
@@ -180,6 +181,40 @@ namespace XUnitConverter
                     var leadingTrivia = classNode.GetLeadingTrivia();
                     var fixUppedTrivia = leadingTrivia.RemoveAt(leadingTrivia.Count - 1);
                     return classNode.WithLeadingTrivia(fixUppedTrivia);
+                });
+            });
+        }
+
+        private void ChangeTestInitializeToCtor(CompilationUnitSyntax root, SemanticModel semanticModel, TransformationTracker transformationTracker)
+        {
+            List<MethodDeclarationSyntax> nodesToReplace = new List<MethodDeclarationSyntax>();
+
+            foreach (var attributeSyntax in root.DescendantNodes().OfType<AttributeSyntax>())
+            {
+                var typeInfo = semanticModel.GetTypeInfo(attributeSyntax);
+                if (typeInfo.Type != null)
+                {
+                    string attributeTypeDocID = typeInfo.Type.GetDocumentationCommentId();
+                    if (IsTestNamespaceType(attributeTypeDocID, "TestInitializeAttribute"))
+                    {
+                        nodesToReplace.Add((MethodDeclarationSyntax)attributeSyntax.Parent.Parent);
+                    }
+                }
+            }
+
+            transformationTracker.AddTransformation(nodesToReplace, (transformationRoot, rewrittenNodes, originalNodeMap) =>
+            {
+                return transformationRoot.ReplaceNodes(rewrittenNodes, (originalNode, rewrittenNode) =>
+                {
+                    var testInitializeMethodNode = ((MethodDeclarationSyntax)originalNode);
+                    var classIdentifier = originalNode.Ancestors().OfType<ClassDeclarationSyntax>().Single().Identifier;
+
+                    var constructorIdentifier = classIdentifier.NormalizeWhitespace();
+                    return SyntaxFactory
+                        .ConstructorDeclaration(constructorIdentifier)
+                        .WithModifiers(testInitializeMethodNode.Modifiers)
+                        .WithParameterList(testInitializeMethodNode.ParameterList)
+                        .WithBody(testInitializeMethodNode.Body);
                 });
             });
         }
