@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -204,6 +205,43 @@ namespace System.Composition.UnitTests
 {
     public class MyTestClass
     {
+        public MyTestClass()
+        {
+        }
+    }
+}
+";
+            await Verify(text, expected);
+        }
+
+        [Fact]
+        public async Task TestUpdatesTestInitializeAttributesKeepsAdditionalAttributesInList()
+        {
+            var text = @"
+using System;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace System.Composition.UnitTests
+{
+    public class MyTestClass
+    {
+        [TestInitialize, DebuggerStepThrough]
+        public void Setup()
+        {
+        }
+    }
+}
+";
+
+            var expected = @"
+using System;
+using Xunit;
+
+namespace System.Composition.UnitTests
+{
+    public class MyTestClass
+    {
+        [DebuggerStepThrough]
         public MyTestClass()
         {
         }

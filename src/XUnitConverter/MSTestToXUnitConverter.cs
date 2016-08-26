@@ -187,7 +187,7 @@ namespace XUnitConverter
 
         private void ChangeTestInitializeToCtor(CompilationUnitSyntax root, SemanticModel semanticModel, TransformationTracker transformationTracker)
         {
-            List<MethodDeclarationSyntax> nodesToReplace = new List<MethodDeclarationSyntax>();
+            List<AttributeSyntax> nodesToReplace = new List<AttributeSyntax>();
 
             foreach (var attributeSyntax in root.DescendantNodes().OfType<AttributeSyntax>())
             {
@@ -197,25 +197,40 @@ namespace XUnitConverter
                     string attributeTypeDocID = typeInfo.Type.GetDocumentationCommentId();
                     if (IsTestNamespaceType(attributeTypeDocID, "TestInitializeAttribute"))
                     {
-                        nodesToReplace.Add((MethodDeclarationSyntax)attributeSyntax.Parent.Parent);
+                        nodesToReplace.Add(attributeSyntax);
                     }
                 }
             }
 
             transformationTracker.AddTransformation(nodesToReplace, (transformationRoot, rewrittenNodes, originalNodeMap) =>
             {
-                return transformationRoot.ReplaceNodes(rewrittenNodes, (originalNode, rewrittenNode) =>
+                foreach(AttributeSyntax testInitializeAttribute in rewrittenNodes)
                 {
-                    var testInitializeMethodNode = ((MethodDeclarationSyntax)originalNode);
-                    var classIdentifier = originalNode.Ancestors().OfType<ClassDeclarationSyntax>().Single().Identifier;
-
+                    var methodNode = (MethodDeclarationSyntax)testInitializeAttribute.Parent.Parent;
+                    var classIdentifier = methodNode.Ancestors().OfType<ClassDeclarationSyntax>().Single().Identifier;
                     var constructorIdentifier = classIdentifier.NormalizeWhitespace();
-                    return SyntaxFactory
+
+                    var constructorNode = SyntaxFactory
                         .ConstructorDeclaration(constructorIdentifier)
-                        .WithModifiers(testInitializeMethodNode.Modifiers)
-                        .WithParameterList(testInitializeMethodNode.ParameterList)
-                        .WithBody(testInitializeMethodNode.Body);
-                });
+                        .WithModifiers(methodNode.Modifiers)
+                        .WithParameterList(methodNode.ParameterList)
+                        .WithBody(methodNode.Body);
+
+                    var oldAttributeList = (AttributeListSyntax)testInitializeAttribute.Parent;
+                    var newAttributes = oldAttributeList.Attributes.Remove(testInitializeAttribute);
+
+                    if (newAttributes.Any())
+                    {
+                        var newAttributeList = oldAttributeList.WithAttributes(newAttributes);
+                        var newAttributeLists = methodNode.AttributeLists.Replace(oldAttributeList, newAttributeList);
+                        constructorNode = constructorNode.WithAttributeLists(newAttributeLists);
+                    }
+
+                    return transformationRoot.ReplaceNode(methodNode, constructorNode);
+
+                }
+
+                return transformationRoot;
             });
         }
 
