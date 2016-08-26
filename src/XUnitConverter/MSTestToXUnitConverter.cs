@@ -225,6 +225,14 @@ namespace XUnitConverter
                         var newAttributeLists = methodNode.AttributeLists.Replace(oldAttributeList, newAttributeList);
                         constructorNode = constructorNode.WithAttributeLists(newAttributeLists);
                     }
+                    else
+                    {
+                        var newAttributeLists = methodNode.AttributeLists.Remove(oldAttributeList);
+                        if(newAttributeLists.Any())
+                        {
+                            constructorNode = constructorNode.WithAttributeLists(newAttributeLists);
+                        }
+                    }
 
                     return transformationRoot.ReplaceNode(methodNode, constructorNode);
 
