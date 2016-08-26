@@ -91,6 +91,7 @@ namespace XUnitConverter
             RemoveTestClassAttributes(root, semanticModel, transformationTracker);
             RemoveContractsRequiredAttributes(root, semanticModel, transformationTracker);
             ChangeTestInitializeToCtor(root, semanticModel, transformationTracker);
+            ChangeTestCleanupToIDisposable(root, semanticModel, transformationTracker);
             ChangeTestMethodAttributesToFact(root, semanticModel, transformationTracker);
             ChangeAssertCalls(root, semanticModel, transformationTracker);
             root = transformationTracker.TransformRoot(root);
@@ -239,6 +240,64 @@ namespace XUnitConverter
                 }
 
                 return transformationRoot;
+            });
+        }
+
+        private void ChangeTestCleanupToIDisposable(CompilationUnitSyntax root, SemanticModel semanticModel, TransformationTracker transformationTracker)
+        {
+            List<MethodDeclarationSyntax> methodNodesToReplace = new List<MethodDeclarationSyntax>();
+            List<ClassDeclarationSyntax> classNodesToAmend = new List<ClassDeclarationSyntax>();
+
+            foreach (var attributeSyntax in root.DescendantNodes().OfType<AttributeSyntax>())
+            {
+                var typeInfo = semanticModel.GetTypeInfo(attributeSyntax);
+                if (typeInfo.Type != null)
+                {
+                    string attributeTypeDocID = typeInfo.Type.GetDocumentationCommentId();
+                    if (IsTestNamespaceType(attributeTypeDocID, "TestCleanupAttribute"))
+                    {
+                        var methodNode = (MethodDeclarationSyntax)attributeSyntax.Parent.Parent;
+                        var classNode = (ClassDeclarationSyntax)methodNode.Parent;
+                        methodNodesToReplace.Add(methodNode);
+                        classNodesToAmend.Add(classNode);
+                    }
+                }
+            }
+
+            transformationTracker.AddTransformation(methodNodesToReplace, (transformationRoot, rewrittenNodes, originalNodeMap) =>
+            {
+                return transformationRoot.ReplaceNodes(rewrittenNodes, (originalNode, rewrittenNode) =>
+                {
+                    var testCleanupMethodNode = ((MethodDeclarationSyntax)rewrittenNode);
+
+                    return testCleanupMethodNode
+                        .WithIdentifier(SyntaxFactory.Identifier("Dispose"))
+                        .WithAttributeLists(default(SyntaxList<AttributeListSyntax>));
+                });
+            });
+
+            transformationTracker.AddTransformation(classNodesToAmend, (transformationRoot, rewrittenNodes, originalNodeMap) =>
+            {
+                return transformationRoot.ReplaceNodes(rewrittenNodes, (originalNode, rewrittenNode) =>
+                {
+                    var classNode = ((ClassDeclarationSyntax)rewrittenNode);
+                    var classIdentifierNode = classNode.Identifier;
+
+                    var iDisposableBaseList = SyntaxFactory
+                        .BaseList(
+                            SyntaxFactory.SingletonSeparatedList<BaseTypeSyntax>(
+                                SyntaxFactory.SimpleBaseType(
+                                    SyntaxFactory.IdentifierName("IDisposable"))))
+                        .NormalizeWhitespace();
+
+                    iDisposableBaseList = iDisposableBaseList
+                        .WithLeadingTrivia(SyntaxFactory.Space)
+                        .WithTrailingTrivia(classIdentifierNode.TrailingTrivia);
+
+                    return classNode
+                        .WithBaseList(iDisposableBaseList)
+                        .WithIdentifier(classIdentifierNode.NormalizeWhitespace());
+                });
             });
         }
 
