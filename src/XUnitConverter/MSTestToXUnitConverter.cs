@@ -96,7 +96,6 @@ namespace XUnitConverter
             ChangeAssertCalls(root, semanticModel, transformationTracker);
             root = transformationTracker.TransformRoot(root);
 
-
             //  Remove compiler directives before the first member of the file (e.g. an #endif after the using statements)
             var firstMember = root.Members.FirstOrDefault();
             if (firstMember != null)
@@ -106,6 +105,23 @@ namespace XUnitConverter
                     var newLeadingTrivia = RemoveCompilerDirectives(firstMember.GetLeadingTrivia());
                     root = root.ReplaceNode(firstMember, firstMember.WithLeadingTrivia(newLeadingTrivia));
                 }
+            }
+
+            var isIDisposableImplemented = root
+                .DescendantNodes()
+                .OfType<SimpleBaseTypeSyntax>()
+                .Select(baseType => baseType.Type)
+                .Where(typeDef => typeDef.IsKind(SyntaxKind.IdentifierName))
+                .Cast<IdentifierNameSyntax>()
+                .Any(ident => ident.Identifier.ValueText == "IDisposable");
+
+            var isSystemAbsent = root
+                .Usings.All(usingNode => usingNode.Name.ToString() != "System");
+
+            if (isIDisposableImplemented && isSystemAbsent)
+            {
+                var systemUsing = SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("System")).NormalizeWhitespace();
+                newUsings.Add(systemUsing);
             }
 
             var xUnitUsing = SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("Xunit")).NormalizeWhitespace();
