@@ -122,7 +122,8 @@ namespace XUnitConverter
             {
                 var systemUsing = SyntaxFactory
                     .UsingDirective(SyntaxFactory.ParseName(nameof(System)))
-                    .NormalizeWhitespace();
+                    .NormalizeWhitespace()
+                    .WithTrailingTrivia(SyntaxFactory.CarriageReturnLineFeed);
                 newUsings.Add(systemUsing);
             }
 
