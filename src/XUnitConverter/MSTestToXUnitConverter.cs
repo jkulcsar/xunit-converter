@@ -107,20 +107,22 @@ namespace XUnitConverter
                 }
             }
 
-            var isIDisposableImplemented = root
-                .DescendantNodes()
-                .OfType<SimpleBaseTypeSyntax>()
-                .Select(baseType => baseType.Type)
-                .Where(typeDef => typeDef.IsKind(SyntaxKind.IdentifierName))
-                .Cast<IdentifierNameSyntax>()
-                .Any(ident => ident.Identifier.ValueText == "IDisposable");
+            var isIDisposableImplemented = (
+                from baseType in root.DescendantNodes().OfType<SimpleBaseTypeSyntax>()
+                select baseType.Type into baseTypeDefinition
+                where baseTypeDefinition is IdentifierNameSyntax &&
+                      ((IdentifierNameSyntax)baseTypeDefinition).Identifier.ValueText == nameof(IDisposable)
+                select baseTypeDefinition).Any();
 
             var isSystemAbsent = root
-                .Usings.All(usingNode => usingNode.Name.ToString() != "System");
+                .Usings
+                .All(usingNode => usingNode.Name.ToString() != nameof(System));
 
             if (isIDisposableImplemented && isSystemAbsent)
             {
-                var systemUsing = SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("System")).NormalizeWhitespace();
+                var systemUsing = SyntaxFactory
+                    .UsingDirective(SyntaxFactory.ParseName(nameof(System)))
+                    .NormalizeWhitespace();
                 newUsings.Add(systemUsing);
             }
 
