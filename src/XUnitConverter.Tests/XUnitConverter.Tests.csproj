@@ -9,6 +9,8 @@
     <RootNamespace>XUnitConverter.Tests</RootNamespace>
     <AssemblyName>XUnitConverter.Tests</AssemblyName>
     <NuGetPackageImportStamp>2f07db9d</NuGetPackageImportStamp>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <!-- Default configurations to help VS understand -->
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
