@@ -1,0 +1,15 @@
+trigger:
+  - master
+
+pool:
+  vmImage: "windows-latest"
+
+variables:
+  patch: $[counter('versioncounter', 1)]
+
+name: 1.0.$(patch)
+
+steps:
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: "test"
