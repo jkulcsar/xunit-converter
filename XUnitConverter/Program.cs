@@ -6,6 +6,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.Build.Locator;
 using Microsoft.CodeAnalysis.MSBuild;
 
 namespace XUnitConverter
@@ -27,6 +28,8 @@ namespace XUnitConverter
 
         private static async Task RunAsync(string projectPath, CancellationToken cancellationToken)
         {
+            MSBuildLocator.RegisterDefaults();
+
             var workspace = MSBuildWorkspace.Create();
             workspace.LoadMetadataForReferencedProjects = true;
 
