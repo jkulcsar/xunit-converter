@@ -7,8 +7,8 @@ schedules:
       include:
         - master
 
-      pool:
-    vmImage: "windows-latest"
+pool:
+  vmImage: "windows-latest"
 
 variables:
   patch: $[counter('versioncounter', 1)]
