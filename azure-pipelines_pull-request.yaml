@@ -17,8 +17,11 @@ name: 1.0.$(patch)
 
 steps:
   - task: DotNetCoreCLI@2
+    displayName: Restore packages
     inputs:
       command: "restore"
+
   - task: DotNetCoreCLI@2
+    displayName: Test
     inputs:
-      command: "test"
+      command: test
