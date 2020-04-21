@@ -2,19 +2,16 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Diagnostics;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CodeGeneration;
-using System.Runtime.Serialization;
-using System.IO;
 
 namespace XUnitConverter
 {
@@ -47,7 +44,9 @@ namespace XUnitConverter
         {
             var root = syntaxNode as CompilationUnitSyntax;
             if (root == null)
+            {
                 return document.Project.Solution;
+            }
 
             if (!LoadMSTestNamespaces())
             {
@@ -224,7 +223,7 @@ namespace XUnitConverter
 
             transformationTracker.AddTransformation(nodesToReplace, (transformationRoot, rewrittenNodes, originalNodeMap) =>
             {
-                foreach(AttributeSyntax testInitializeAttribute in rewrittenNodes)
+                foreach (AttributeSyntax testInitializeAttribute in rewrittenNodes)
                 {
                     var methodNode = (MethodDeclarationSyntax)testInitializeAttribute.Parent.Parent;
                     var classIdentifier = methodNode.Ancestors().OfType<ClassDeclarationSyntax>().Single().Identifier;
@@ -248,7 +247,7 @@ namespace XUnitConverter
                     else
                     {
                         var newAttributeLists = methodNode.AttributeLists.Remove(oldAttributeList);
-                        if(newAttributeLists.Any())
+                        if (newAttributeLists.Any())
                         {
                             constructorNode = constructorNode.WithAttributeLists(newAttributeLists);
                         }
