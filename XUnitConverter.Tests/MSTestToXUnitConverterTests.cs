@@ -2,17 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis;
+
 using Xunit;
-using System.Threading;
-using Microsoft.CodeAnalysis.Formatting;
-using Microsoft.CodeAnalysis.Text;
 
 namespace XUnitConverter.Tests
 {
@@ -414,6 +406,27 @@ namespace System.Composition.UnitTests
             Assert.IsAssignableFrom(typeof(String), string.Empty);
         }
     }
+}
+";
+            await Verify(text, expected);
+        }
+
+        [Fact]
+        public async Task TestUpdatesUsingStatements_WithinNamespaces()
+        {
+            var text = @"
+namespace System.Composition.UnitTests
+{
+    using System;
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
+}
+";
+
+            var expected = @"
+namespace System.Composition.UnitTests
+{
+    using System;
+    using Xunit;
 }
 ";
             await Verify(text, expected);

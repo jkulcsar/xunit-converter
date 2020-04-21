@@ -60,7 +60,8 @@ namespace XUnitConverter
             List<UsingDirectiveSyntax> newUsings = new List<UsingDirectiveSyntax>();
             bool needsChanges = false;
 
-            foreach (var usingSyntax in root.Usings)
+            var firstNamespaceDeclaration = (NamespaceDeclarationSyntax)root.Members.First();
+            foreach (var usingSyntax in firstNamespaceDeclaration.Usings)
             {
                 var symbolInfo = semanticModel.GetSymbolInfo(usingSyntax.Name);
                 if (symbolInfo.Symbol != null)
@@ -113,7 +114,9 @@ namespace XUnitConverter
                       ((IdentifierNameSyntax)baseTypeDefinition).Identifier.ValueText == nameof(IDisposable)
                 select baseTypeDefinition).Any();
 
-            var isSystemAbsent = root
+            var isSystemAbsent = ((NamespaceDeclarationSyntax)root
+                .Members
+                .First())
                 .Usings
                 .All(usingNode => usingNode.Name.ToString() != nameof(System));
 
@@ -130,11 +133,13 @@ namespace XUnitConverter
             newUsings.Add(xUnitUsing);
 
             //  Apply trailing trivia from original last using statement to new last using statement
-            SyntaxTriviaList usingTrailingTrivia = RemoveCompilerDirectives(originalRoot.Usings.Last().GetTrailingTrivia());
+            SyntaxTriviaList usingTrailingTrivia = RemoveCompilerDirectives(((NamespaceDeclarationSyntax)originalRoot.Members.First()).Usings.Last().GetTrailingTrivia());
             newUsings[newUsings.Count - 1] = newUsings.Last().WithTrailingTrivia(usingTrailingTrivia);
 
-            root = root.WithUsings(SyntaxFactory.List<UsingDirectiveSyntax>(newUsings));
+            //root = root.WithUsings(SyntaxFactory.List<UsingDirectiveSyntax>(newUsings));
 
+            var newFirstNamespaceDeclaration = ((NamespaceDeclarationSyntax)root.Members.First()).WithUsings(SyntaxFactory.List<UsingDirectiveSyntax>(newUsings));
+            root = root.ReplaceNode(root.Members.First(), newFirstNamespaceDeclaration);
 
             return document.WithSyntaxRoot(root).Project.Solution;
         }
