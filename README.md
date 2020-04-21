@@ -1,6 +1,7 @@
 # XUnitConverter
 
-[![Build Status](https://dev.azure.com/thijsbrobbel/tiesmaster/_apis/build/status/tiesmaster.xunit-converter?branchName=master)](https://dev.azure.com/thijsbrobbel/tiesmaster/_build/latest?definitionId=2&branchName=master)
+[![Build
+Status](https://dev.azure.com/tiesmaster/xunit-converter/_apis/build/status/xunit-converter%20%5Bpull%20request%5D?branchName=master)](https://dev.azure.com/tiesmaster/xunit-converter/_build/latest?definitionId=2&branchName=master)
 
 This is a tool for converting projects from using MSTest to XUnit.  This tool automates many of the repetitive tasks like changing to `[Fact]` attributes, using the correct methods on `Assert`, updating namespaces, etc ...
 
