@@ -1,0 +1,31 @@
+braindump
+
+update packages
+    NuKeeper
+
+multi target this project, .net core also works
+    investigate if dotnet format can also do legacy netfx
+    they don't do it that way
+    they do have support via the --folder option
+    might be an option for us
+
+publish as dotnet global tool
+    needs to be converted to .NET Core
+    version needs to be set correctly
+        which package is that?
+            gitversioning
+            nerd bank....
+
+change custom arguments parsing to using system.commandline, or the nate mcmaster one
+publish via devops to nuget
+
+enable dependabot??
+
+add to lists
+    OSS list
+    list of global tools
+
+make PR to codeformatter repo with mention to my permanent fork
+
+Move to issues
+    fix the build
