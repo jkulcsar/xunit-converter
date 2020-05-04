@@ -1,3 +1,9 @@
+add sample projects
+  netcoreapp3.1
+  netfx
+
+  add launch configurations
+
 braindump
 
 update packages
