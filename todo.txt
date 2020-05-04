@@ -1,8 +1,5 @@
 add sample projects
-  netcoreapp3.1
   netfx
-
-  add launch configurations
 
 braindump
 
@@ -32,6 +29,3 @@ add to lists
     list of global tools
 
 make PR to codeformatter repo with mention to my permanent fork
-
-Move to issues
-    fix the build
