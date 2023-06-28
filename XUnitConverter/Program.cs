@@ -3,6 +3,8 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -28,7 +30,22 @@ namespace XUnitConverter
 
         private static async Task RunAsync(string projectPath, CancellationToken cancellationToken)
         {
-            MSBuildLocator.RegisterDefaults();
+            //MSBuildLocator.RegisterDefaults();
+
+            //VisualStudioInstance latestVersion = MSBuildLocator.QueryVisualStudioInstances().OrderByDescending(instance => instance.Version).First();
+            //MSBuildLocator.RegisterInstance(latestVersion);
+
+            var visualStudioInstance = MSBuildLocator.QueryVisualStudioInstances().First();
+
+            var studioInstance = (VisualStudioInstance)Activator.CreateInstance(
+                typeof(VisualStudioInstance),
+                BindingFlags.NonPublic | BindingFlags.Instance,
+                null,
+                new object[] { visualStudioInstance.Name, visualStudioInstance.MSBuildPath + "\\", visualStudioInstance.Version, visualStudioInstance.DiscoveryType },
+                null,
+                null)!;
+
+            MSBuildLocator.RegisterInstance(studioInstance);
 
             var workspace = MSBuildWorkspace.Create();
             workspace.LoadMetadataForReferencedProjects = true;
