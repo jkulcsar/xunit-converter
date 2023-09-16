@@ -17,7 +17,7 @@ namespace XUnitConverter
     public sealed class MSTestToXUnitConverter : ConverterBase
     {
         private static object s_lockObject = new object();
-        private static HashSet<string> s_mstestNamespaces;
+        private static HashSet<string?> s_mstestNamespaces;
 
         private static UsingDirectiveSyntax RemoveLeadingAndTrailingCompilerDirectives(UsingDirectiveSyntax usingSyntax)
         {
@@ -52,18 +52,23 @@ namespace XUnitConverter
 
             var originalRoot = root;
 
-            SemanticModel semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
+            SemanticModel? semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
 
             List<UsingDirectiveSyntax> newUsings = new List<UsingDirectiveSyntax>();
             bool needsChanges = false;
 
             foreach (var usingSyntax in root.Usings)
             {
+                if (usingSyntax.Name == null)
+                {
+                    continue;
+                }
+
                 var symbolInfo = semanticModel.GetSymbolInfo(usingSyntax.Name);
                 if (symbolInfo.Symbol != null)
                 {
-                    string namespaceDocID = symbolInfo.Symbol.GetDocumentationCommentId();
-                    if (s_mstestNamespaces.Contains(namespaceDocID))
+                    string? namespaceDocId = symbolInfo.Symbol.GetDocumentationCommentId();
+                    if (s_mstestNamespaces.Contains(namespaceDocId))
                     {
                         needsChanges = true;
                     }
@@ -136,17 +141,17 @@ namespace XUnitConverter
             return document.WithSyntaxRoot(root).Project.Solution;
         }
 
-        private void RemoveContractsRequiredAttributes(CompilationUnitSyntax root, SemanticModel semanticModel, TransformationTracker transformationTracker)
+        private void RemoveContractsRequiredAttributes(CompilationUnitSyntax root, SemanticModel? semanticModel, TransformationTracker transformationTracker)
         {
             RemoveTestAttributes(root, semanticModel, transformationTracker, "ContractsRequiredAttribute");
         }
 
-        private void RemoveTestClassAttributes(CompilationUnitSyntax root, SemanticModel semanticModel, TransformationTracker transformationTracker)
+        private void RemoveTestClassAttributes(CompilationUnitSyntax root, SemanticModel? semanticModel, TransformationTracker transformationTracker)
         {
             RemoveTestAttributes(root, semanticModel, transformationTracker, "TestClassAttribute");
         }
 
-        private void RemoveTestAttributes(CompilationUnitSyntax root, SemanticModel semanticModel, TransformationTracker transformationTracker, string attributeName)
+        private void RemoveTestAttributes(CompilationUnitSyntax root, SemanticModel? semanticModel, TransformationTracker transformationTracker, string attributeName)
         {
             List<AttributeSyntax> nodesToRemove = new List<AttributeSyntax>();
             List<ClassDeclarationSyntax> classNodesToFixUp = new List<ClassDeclarationSyntax>();
@@ -201,7 +206,7 @@ namespace XUnitConverter
             });
         }
 
-        private void ChangeTestInitializeToCtor(CompilationUnitSyntax root, SemanticModel semanticModel, TransformationTracker transformationTracker)
+        private void ChangeTestInitializeToCtor(CompilationUnitSyntax root, SemanticModel? semanticModel, TransformationTracker transformationTracker)
         {
             List<AttributeSyntax> nodesToReplace = new List<AttributeSyntax>();
 
@@ -258,7 +263,7 @@ namespace XUnitConverter
             });
         }
 
-        private void ChangeTestCleanupToIDisposable(CompilationUnitSyntax root, SemanticModel semanticModel, TransformationTracker transformationTracker)
+        private void ChangeTestCleanupToIDisposable(CompilationUnitSyntax root, SemanticModel? semanticModel, TransformationTracker transformationTracker)
         {
             List<MethodDeclarationSyntax> methodNodesToReplace = new List<MethodDeclarationSyntax>();
             List<ClassDeclarationSyntax> classNodesToAmend = new List<ClassDeclarationSyntax>();
@@ -316,7 +321,7 @@ namespace XUnitConverter
             });
         }
 
-        private void ChangeTestMethodAttributesToFact(CompilationUnitSyntax root, SemanticModel semanticModel, TransformationTracker transformationTracker)
+        private void ChangeTestMethodAttributesToFact(CompilationUnitSyntax root, SemanticModel? semanticModel, TransformationTracker transformationTracker)
         {
             List<AttributeSyntax> nodesToReplace = new List<AttributeSyntax>();
 
@@ -342,7 +347,7 @@ namespace XUnitConverter
             });
         }
 
-        private void ChangeAssertCalls(CompilationUnitSyntax root, SemanticModel semanticModel, TransformationTracker transformationTracker)
+        private void ChangeAssertCalls(CompilationUnitSyntax root, SemanticModel? semanticModel, TransformationTracker transformationTracker)
         {
             Dictionary<string, string> assertMethodsToRename = new Dictionary<string, string>()
             {
@@ -446,7 +451,7 @@ namespace XUnitConverter
                 return false;
             }
 
-            string namespaceDocID = "N" + docID.Substring(1, lastPeriod - 1);
+            string? namespaceDocID = "N" + docID.Substring(1, lastPeriod - 1);
             return s_mstestNamespaces.Contains(namespaceDocID);
         }
 
@@ -470,7 +475,7 @@ namespace XUnitConverter
                 }
 
                 var lines = File.ReadAllLines(filePath);
-                s_mstestNamespaces = new HashSet<string>(lines);
+                s_mstestNamespaces = new HashSet<string?>(lines);
                 return true;
             }
         }

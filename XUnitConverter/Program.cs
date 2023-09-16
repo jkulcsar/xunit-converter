@@ -15,7 +15,7 @@ namespace XUnitConverter
 {
     internal static class Program
     {
-        internal static void Main(string[] args)
+        internal static async Task Main(string[] args)
         {
             if (args.Length != 1)
             {
@@ -25,16 +25,11 @@ namespace XUnitConverter
 
             var cts = new CancellationTokenSource();
             Console.CancelKeyPress += delegate { cts.Cancel(); };
-            RunAsync(args[0], cts.Token).Wait();
+            await RunAsync(args[0], cts.Token);
         }
 
         private static async Task RunAsync(string projectPath, CancellationToken cancellationToken)
         {
-            //MSBuildLocator.RegisterDefaults();
-
-            //VisualStudioInstance latestVersion = MSBuildLocator.QueryVisualStudioInstances().OrderByDescending(instance => instance.Version).First();
-            //MSBuildLocator.RegisterInstance(latestVersion);
-
             var visualStudioInstance = MSBuildLocator.QueryVisualStudioInstances().First();
 
             var studioInstance = (VisualStudioInstance)Activator.CreateInstance(

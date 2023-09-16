@@ -16,6 +16,11 @@ namespace XUnitConverter
             foreach (var id in project.DocumentIds)
             {
                 var document = solution.GetDocument(id);
+                if (document == null)
+                {
+                    continue;
+                }
+
                 var syntaxNode = await document.GetSyntaxRootAsync(cancellationToken);
                 if (syntaxNode == null)
                 {
