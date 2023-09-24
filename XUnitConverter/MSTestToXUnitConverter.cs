@@ -64,22 +64,34 @@ namespace XUnitConverter
                     continue;
                 }
 
-                var symbolInfo = semanticModel.GetSymbolInfo(usingSyntax.Name);
-                if (symbolInfo.Symbol != null)
+                try
                 {
-                    string? namespaceDocId = symbolInfo.Symbol.GetDocumentationCommentId();
-                    if (s_mstestNamespaces.Contains(namespaceDocId))
-                    {
-                        needsChanges = true;
-                    }
-                    else
-                    {
-                        newUsings.Add(RemoveLeadingAndTrailingCompilerDirectives(usingSyntax));
-                    }
+                    //var symbolInfo = semanticModel.GetSymbolInfo(usingSyntax.Name);
+
+                    //var s = semanticModel.GetDeclaredSymbol(usingSyntax.Name);
+                    //if (symbolInfo.Symbol != null)
+                    //{
+                        //string? namespaceDocId = symbolInfo.Symbol.GetDocumentationCommentId();
+                        //if (s_mstestNamespaces.Contains(namespaceDocId))
+                        var s = usingSyntax.Name.ToString();
+                        if(s.Contains("Microsoft.VisualStudio.TestTools.UnitTesting"))
+                        {
+                            needsChanges = true;
+                        }
+                        else
+                        {
+                            newUsings.Add(RemoveLeadingAndTrailingCompilerDirectives(usingSyntax));
+                        }
+                    //}
+                    //else
+                    //{
+                    //    newUsings.Add(RemoveLeadingAndTrailingCompilerDirectives(usingSyntax));
+                   // }
                 }
-                else
+                catch (Exception e)
                 {
-                    newUsings.Add(RemoveLeadingAndTrailingCompilerDirectives(usingSyntax));
+                    Console.WriteLine(e);
+                    throw;
                 }
             }
 

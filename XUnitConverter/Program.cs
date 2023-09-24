@@ -30,17 +30,19 @@ namespace XUnitConverter
 
         private static async Task RunAsync(string projectPath, CancellationToken cancellationToken)
         {
-            var visualStudioInstance = MSBuildLocator.QueryVisualStudioInstances().First();
+            MSBuildLocator.RegisterDefaults();
 
-            var studioInstance = (VisualStudioInstance)Activator.CreateInstance(
-                typeof(VisualStudioInstance),
-                BindingFlags.NonPublic | BindingFlags.Instance,
-                null,
-                new object[] { visualStudioInstance.Name, visualStudioInstance.MSBuildPath + "\\", visualStudioInstance.Version, visualStudioInstance.DiscoveryType },
-                null,
-                null)!;
-
-            MSBuildLocator.RegisterInstance(studioInstance);
+            // var visualStudioInstance = MSBuildLocator.QueryVisualStudioInstances().First();
+            //
+            // var studioInstance = (VisualStudioInstance)Activator.CreateInstance(
+            //     typeof(VisualStudioInstance),
+            //     BindingFlags.NonPublic | BindingFlags.Instance,
+            //     null,
+            //     new object[] { visualStudioInstance.Name, visualStudioInstance.MSBuildPath + "\\", visualStudioInstance.Version, visualStudioInstance.DiscoveryType },
+            //     null,
+            //     null)!;
+            //
+            // MSBuildLocator.RegisterInstance(studioInstance);
 
             var workspace = MSBuildWorkspace.Create();
             workspace.LoadMetadataForReferencedProjects = true;
